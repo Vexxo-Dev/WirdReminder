@@ -1,4 +1,4 @@
-# Wird Reminder | مُذكِّر الوِرد
+# مُذكِّر الوِرد اليومي - Wird Reminder
 
 A humble companion for your journey with the Holy Quran. **Wird Reminder** is a Chrome extension designed to help you maintain a consistent daily or weekly Quran reading habit through gentle reminders and a beautiful reading experience.
 

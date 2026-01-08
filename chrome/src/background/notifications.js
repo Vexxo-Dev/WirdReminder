@@ -1,35 +1,37 @@
 // src/background/notifications.js
 
 export async function showNotification(reminderId, notificationId) {
-    const { user_reminders } = await chrome.storage.local.get('user_reminders');
+    try {
+        const { user_reminders } = await chrome.storage.local.get('user_reminders');
 
-    // Fetch presets
-    const url = chrome.runtime.getURL('src/data/presets.json');
-    const response = await fetch(url);
-    const presets = await response.json();
+        // Fetch presets
+        const url = chrome.runtime.getURL('src/data/presets.json');
+        const response = await fetch(url);
+        const presets = await response.json();
 
-    let reminder = user_reminders?.find(r => r.id === reminderId);
-    if (!reminder) {
-        reminder = presets.find(r => r.id === reminderId);
-    }
+        let reminder = user_reminders?.find(r => r.id === reminderId);
+        if (!reminder) {
+            reminder = presets.find(r => r.id === reminderId);
+        }
 
-    if (reminder) {
-        chrome.notifications.create(notificationId, {
+        const notificationOptions = {
             type: 'basic',
             iconUrl: chrome.runtime.getURL('src/assets/icons/icon128.png'),
-            title: 'Wird Reminder',
-            message: `Time to read: ${reminder.name}`,
+            title: 'مُذكِّر الوِرد اليومي',
+            message: reminder ? `حان وقت قراءة: ${reminder.name}` : 'حان وقت وردك اليومي!',
             priority: 2,
-            buttons: [{ title: 'اقرأ الآن' }] // Add Read Now button
-        });
-    } else {
-        chrome.notifications.create(notificationId, {
-            type: 'basic',
-            iconUrl: chrome.runtime.getURL('src/assets/icons/icon128.png'),
-            title: 'Wird Reminder',
-            message: 'Time for your daily Wird!',
-            priority: 2,
+            requireInteraction: true,
             buttons: [{ title: 'اقرأ الآن' }]
+        };
+
+        chrome.notifications.create(notificationId, notificationOptions, (createdId) => {
+            if (chrome.runtime.lastError) {
+                console.error('Notification creation failed:', chrome.runtime.lastError.message);
+            } else {
+                console.log('Notification created:', createdId);
+            }
         });
+    } catch (e) {
+        console.error('Error in showNotification:', e);
     }
 }

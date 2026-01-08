@@ -42,16 +42,18 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
     }
 });
 
-// --- Notification Click Listener ---
+// --- Notification Click Listener (Firefox uses onClicked, not onButtonClicked) ---
 
-browser.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
-    if (buttonIndex === 0) { // 'Read Now' clicked
-        if (notificationId.startsWith('reminder_')) {
-            const reminderId = notificationId.replace('reminder_', '');
+browser.notifications.onClicked.addListener(async (notificationId) => {
+    console.log('Notification clicked:', notificationId);
+    if (notificationId.startsWith('reminder_')) {
+        const reminderId = notificationId.replace('reminder_', '');
 
-            // Open Reader in new tab
-            const url = browser.runtime.getURL(`src/reader/reader.html?reminderId=${reminderId}`);
-            browser.tabs.create({ url });
-        }
+        // Open Reader in new tab
+        const url = browser.runtime.getURL(`src/reader/reader.html?reminderId=${reminderId}`);
+        browser.tabs.create({ url });
+
+        // Clear the notification after clicking
+        browser.notifications.clear(notificationId);
     }
 });
