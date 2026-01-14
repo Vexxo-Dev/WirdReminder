@@ -411,11 +411,10 @@ body {
    APP MODE (For Android / Installed PWA)
    =========================================================================== */
 body.is-app {
-    height: 100vh;
-    height: 100svh;
-    overflow: hidden;
-    position: fixed;
+    height: auto;
     width: 100%;
+    overflow-x: hidden;
+    background-color: hsl(var(--background));
 }
 
 body.is-app .landing-only {
@@ -423,9 +422,13 @@ body.is-app .landing-only {
 }
 
 body.is-app .demo {
-    padding: 0;
-    max-width: none;
-    margin: 0;
+    padding: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 body.is-app .phone-frame-wrapper {
@@ -434,10 +437,10 @@ body.is-app .phone-frame-wrapper {
 
 body.is-app .phone-frame {
     width: 100%;
-    height: 100vh;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
+    height: 75vh;
+    border-radius: 24px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 body.is-app .phone-notch {
