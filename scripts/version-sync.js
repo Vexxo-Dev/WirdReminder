@@ -26,15 +26,21 @@ function updateManifest(filePath) {
 function updateAndroidVersion(filePath) {
     if (fs.existsSync(filePath)) {
         let content = fs.readFileSync(filePath, 'utf8');
-        // Update versionName "x.x"
+
+        // Compute versionCode from version string (e.g., "1.1.0" -> 10100)
+        const versionParts = version.split('.');
+        const versionCode = parseInt(versionParts[0]) * 10000 +
+            parseInt(versionParts[1]) * 100 +
+            parseInt(versionParts[2] || '0');
+
+        // Update versionCode
+        content = content.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
+
+        // Update versionName "x.x.x"
         content = content.replace(/versionName\s+".*?"/g, `versionName "${version}"`);
 
-        // Auto-increment versionCode if it's a new version
-        // This is a simple logic, might need adjustment for more complex use cases
-        // For now, just ensure it matches package.json version
-
         fs.writeFileSync(filePath, content);
-        console.log(`✅ Updated ${path.relative(path.join(__dirname, '..'), filePath)} to v${version}`);
+        console.log(`✅ Updated ${path.relative(path.join(__dirname, '..'), filePath)} to v${version} (versionCode: ${versionCode})`);
     }
 }
 

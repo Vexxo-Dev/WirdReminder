@@ -1,14 +1,18 @@
 {
   "name": "wirdreminder",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A humble companion for your journey with the Holy Quran.",
   "main": "www/app.js",
   "scripts": {
     "postversion": "node scripts/version-sync.js",
     "sync": "node scripts/sync.js",
     "build": "node scripts/build.js",
-    "build:android": "npx cap copy android",
     "android:refresh": "npm run sync && ANDROID_HOME=/home/hadi/Android/Sdk npx cap run android",
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "android:build:release": "cd android && ./gradlew bundleRelease",
+    "sign:android": "bash scripts/sign-release-bundle.sh",
+    "build:apk:signed": "bash scripts/build-and-sign-apk.sh",
+    "open:android": "CAPACITOR_ANDROID_STUDIO_PATH=/opt/android-studio/bin/studio.sh npx cap open android",
     "tools:icons": "node scripts/generate-icons.js"
   },
   "repository": {
