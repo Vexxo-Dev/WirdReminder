@@ -1,5 +1,11 @@
 {
   "appId": "com.hadealahmad.wirdreminder",
   "appName": "مذكّر الورد اليومي",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notification",
+      "iconColor": "#2E7D32"
+    }
+  }
 }

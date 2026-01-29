@@ -3,6 +3,7 @@ import { storage } from './core/js/adapter/storage.js';
 import { parseVersesToPages } from './core/js/parser.js';
 import * as reminderLogic from './core/js/logic/reminders.js';
 import { env } from './core/js/adapter/env.js';
+import { notificationManager } from './core/js/adapter/notifications.js';
 
 // Logic Delegates
 const addReminder = reminderLogic.addReminder;
@@ -106,9 +107,27 @@ async function initCapacitor() {
             const status = await LocalNotifications.requestPermissions();
             console.log('[Capacitor] Notification permission status:', status);
 
+            // Check and request exact alarm permission (Android 12+)
+            try {
+                const exactAlarmStatus = await LocalNotifications.checkExactNotificationSetting();
+                console.log('[Capacitor] Exact alarm setting:', exactAlarmStatus);
+
+                if (exactAlarmStatus.exact_alarm !== 'granted') {
+                    console.warn('[Capacitor] Exact alarms not granted. Notifications may not fire on time.');
+                }
+            } catch (e) {
+                // Older Android versions don't support this
+                console.log('[Capacitor] Exact alarm check not available (older Android)');
+            }
+
+            // Reschedule all notifications on app startup
+            // This ensures notifications persist after app updates or device restarts
+            await notificationManager.rescheduleAll();
+
             // Handle notification clicks
             LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-                const reminderId = notificationAction.notification.extra.reminderId;
+                const extra = notificationAction.notification.extra || {};
+                const reminderId = extra.reminderId;
                 console.log('[Capacitor] Notification clicked for reminder:', reminderId);
 
                 if (reminderId) {
@@ -121,6 +140,11 @@ async function initCapacitor() {
                         }
                     }, 500);
                 }
+            });
+
+            // Listen for notification received while app is open
+            LocalNotifications.addListener('localNotificationReceived', (notification) => {
+                console.log('[Capacitor] Notification received:', notification.title);
             });
         } catch (e) {
             console.error('[Capacitor] Initialization failed:', e);
