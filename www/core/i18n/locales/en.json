@@ -163,5 +163,15 @@
     "completed": "Completed",
     "missed": "Missed",
     "close": "Close"
+  },
+  "card": {
+    "notScheduled": "Not Scheduled",
+    "bookmarkTitle": "You have a saved bookmark",
+    "read": "Read",
+    "unread": "Unread",
+    "progressHistory": "Progress History",
+    "readBtn": "Read",
+    "edit": "Edit",
+    "delete": "Delete"
   }
 }

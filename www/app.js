@@ -330,59 +330,119 @@ function createReminderCard(reminder, lastReadTs, isActive, hasBookmark = false)
     const div = document.createElement('div');
     div.className = 'reminder-card';
 
-    const freqLabel = reminder.timing ? getFrequencyLabel(reminder.timing) : 'مسبق الضبط';
-    const timeLabel = reminder.timing ? `${reminder.timing.time} - ${freqLabel}` : 'غير محدد';
-
-    const bookmarkBadge = hasBookmark ? '<span style="margin-right:0.5rem; font-size:1rem;" title="لديك علامة محفوظة">🔖</span>' : '';
-
+    const freqLabel = reminder.timing ? getFrequencyLabel(reminder.timing) : i18n.t('frequency.preset');
+    const timeLabel = reminder.timing ? `${reminder.timing.time} - ${freqLabel}` : i18n.t('card.notScheduled');
     const isRead = isReadInCurrentPeriod(reminder, lastReadTs);
-    const checkboxLabel = isRead ? 'مقروء' : 'غير مقروء';
 
-    const checkboxHtml = isActive ? `
-            <div class="checkbox-wrapper mark-read-checkbox" data-id="${reminder.id}">
-                <button class="checkbox" role="checkbox" aria-checked="${isRead}">
-                    <span class="checkbox-indicator">✓</span>
-                </button>
-                <span class="checkbox-label">${checkboxLabel}</span>
-            </div>` : '';
+    // Card Header
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header';
 
-    div.innerHTML = `
-        <div class="card-header">
-            <div>
-                <div class="card-title">${bookmarkBadge}${reminder.name || reminder.description}</div>
-                <div class="card-description">${timeLabel}</div>
-            </div>
-            <div class="card-header-actions">
-                <button class="btn btn-ghost calendar-btn" title="سجل الإنجاز">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </button>
-                <button class="switch" role="switch" aria-checked="${isActive && reminder.enabled !== false}" data-id="${reminder.id}">
-                    <span class="switch-thumb"></span>
-                </button>
-            </div>
-        </div>
-        <div class="card-actions">
-            <div class="btn-group">
-                <button class="btn btn-primary read-btn">اقرأ</button>
-                <button class="btn btn-outline edit-btn" ${!isActive ? 'style="display:none"' : ''}>تعديل</button>
-            </div>
-            ${checkboxHtml}
-            <button class="btn btn-ghost btn-destructive delete-btn" ${!isActive ? 'style="display:none"' : ''}>حذف</button>
-        </div>
-    `;
+    const headerLeft = document.createElement('div');
+    
+    const cardTitle = document.createElement('div');
+    cardTitle.className = 'card-title';
+    if (hasBookmark) {
+        const bookmarkSpan = document.createElement('span');
+        bookmarkSpan.style.marginRight = '0.5rem';
+        bookmarkSpan.style.fontSize = '1rem';
+        bookmarkSpan.title = i18n.t('card.bookmarkTitle');
+        bookmarkSpan.textContent = '🔖';
+        cardTitle.appendChild(bookmarkSpan);
+    }
+    cardTitle.appendChild(document.createTextNode(reminder.name || reminder.description));
+
+    const cardDesc = document.createElement('div');
+    cardDesc.className = 'card-description';
+    cardDesc.textContent = timeLabel;
+
+    headerLeft.appendChild(cardTitle);
+    headerLeft.appendChild(cardDesc);
+
+    const headerActions = document.createElement('div');
+    headerActions.className = 'card-header-actions';
+
+    const calendarBtn = document.createElement('button');
+    calendarBtn.className = 'btn btn-ghost calendar-btn';
+    calendarBtn.title = i18n.t('card.progressHistory');
+    calendarBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
+    const switchBtn = document.createElement('button');
+    switchBtn.className = 'switch';
+    switchBtn.role = 'switch';
+    switchBtn.setAttribute('aria-checked', isActive && reminder.enabled !== false);
+    switchBtn.dataset.id = reminder.id;
+    const switchThumb = document.createElement('span');
+    switchThumb.className = 'switch-thumb';
+    switchBtn.appendChild(switchThumb);
+
+    headerActions.appendChild(calendarBtn);
+    headerActions.appendChild(switchBtn);
+
+    cardHeader.appendChild(headerLeft);
+    cardHeader.appendChild(headerActions);
+
+    // Card Actions
+    const cardActions = document.createElement('div');
+    cardActions.className = 'card-actions';
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
+
+    const readBtn = document.createElement('button');
+    readBtn.className = 'btn btn-primary read-btn';
+    readBtn.textContent = i18n.t('card.readBtn');
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-outline edit-btn';
+    editBtn.textContent = i18n.t('card.edit');
+    if (!isActive) editBtn.style.display = 'none';
+
+    btnGroup.appendChild(readBtn);
+    btnGroup.appendChild(editBtn);
+
+    cardActions.appendChild(btnGroup);
+
+    if (isActive) {
+        const checkboxWrapper = document.createElement('div');
+        checkboxWrapper.className = 'checkbox-wrapper mark-read-checkbox';
+        checkboxWrapper.dataset.id = reminder.id;
+
+        const checkbox = document.createElement('button');
+        checkbox.className = 'checkbox';
+        checkbox.role = 'checkbox';
+        checkbox.setAttribute('aria-checked', isRead);
+
+        const checkboxIndicator = document.createElement('span');
+        checkboxIndicator.className = 'checkbox-indicator';
+        checkboxIndicator.textContent = '✓';
+        checkbox.appendChild(checkboxIndicator);
+
+        const checkboxLabel = document.createElement('span');
+        checkboxLabel.className = 'checkbox-label';
+        checkboxLabel.textContent = isRead ? i18n.t('card.read') : i18n.t('card.unread');
+
+        checkboxWrapper.appendChild(checkbox);
+        checkboxWrapper.appendChild(checkboxLabel);
+        cardActions.appendChild(checkboxWrapper);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-ghost btn-destructive delete-btn';
+    deleteBtn.textContent = i18n.t('card.delete');
+    if (!isActive) deleteBtn.style.display = 'none';
+
+    cardActions.appendChild(deleteBtn);
+
+    div.appendChild(cardHeader);
+    div.appendChild(cardActions);
 
     // Calendar Button
-    div.querySelector('.calendar-btn').addEventListener('click', () => {
+    calendarBtn.addEventListener('click', () => {
         showCalendarModal(reminder);
     });
 
     // Toggle Switch
-    const switchBtn = div.querySelector('.switch');
     switchBtn.addEventListener('click', async () => {
         const currentlyChecked = switchBtn.getAttribute('aria-checked') === 'true';
         const newVal = !currentlyChecked;
@@ -404,7 +464,7 @@ function createReminderCard(reminder, lastReadTs, isActive, hasBookmark = false)
     });
 
     // Read Button
-    div.querySelector('.read-btn').addEventListener('click', () => {
+    readBtn.addEventListener('click', () => {
         openReader(reminder);
     });
 
@@ -426,17 +486,15 @@ function createReminderCard(reminder, lastReadTs, isActive, hasBookmark = false)
     }
 
     // Edit Button
-    const editBtn = div.querySelector('.edit-btn');
-    if (editBtn) {
+    if (isActive) {
         editBtn.addEventListener('click', () => {
             startEditing(reminder);
         });
     }
 
     // Delete Button
-    const delBtn = div.querySelector('.delete-btn');
-    if (delBtn) {
-        delBtn.addEventListener('click', () => {
+    if (isActive) {
+        deleteBtn.addEventListener('click', () => {
             showDeleteModal(reminder.id);
         });
     }

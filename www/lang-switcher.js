@@ -23,6 +23,9 @@ async function applyLangToDom() {
   document.querySelectorAll('[data-set-lang]').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.setLang === lang);
   });
+
+  // Trigger app reload
+  window.dispatchEvent(new Event('language-changed'));
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -25,8 +25,8 @@ function detectLang() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved && (saved === 'ar' || saved === 'en')) return saved;
 
-  const browser = navigator.language?.split("-")[0];
-  return (browser === 'ar' || browser === 'en') ? browser : FALLBACK;
+  // Always default to Arabic for first-time visitors
+  return FALLBACK;
 }
 
 /**

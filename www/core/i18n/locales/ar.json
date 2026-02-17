@@ -163,5 +163,15 @@
     "completed": "مُنجز",
     "missed": "غير مُنجز",
     "close": "إغلاق"
+  },
+  "card": {
+    "notScheduled": "غير محدد",
+    "bookmarkTitle": "لديك علامة محفوظة",
+    "read": "مقروء",
+    "unread": "غير مقروء",
+    "progressHistory": "سجل الإنجاز",
+    "readBtn": "اقرأ",
+    "edit": "تعديل",
+    "delete": "حذف"
   }
 }
