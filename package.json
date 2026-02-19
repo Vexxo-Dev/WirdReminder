@@ -1,6 +1,6 @@
 {
   "name": "wirdreminder",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "A humble companion for your journey with the Holy Quran.",
   "main": "www/app.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "android:build:release": "cd android && ./gradlew bundleRelease",
     "sign:android": "bash scripts/sign-release-bundle.sh",
     "build:apk:signed": "bash scripts/build-and-sign-apk.sh",
-    "open:android": "CAPACITOR_ANDROID_STUDIO_PATH=/opt/android-studio/bin/studio.sh npx cap open android",
+    "open:android": "CAPACITOR_ANDROID_STUDIO_PATH=/snap/bin/android-studio npx cap open android",
     "tools:icons": "node scripts/generate-icons.js"
   },
   "repository": {
