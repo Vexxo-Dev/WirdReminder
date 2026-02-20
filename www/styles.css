@@ -173,83 +173,58 @@ header h1 {
     height: 24px;
 }
 
-/* Bottom Tab Navigation */
+/* Inline Tab Navigation (Extension-style) */
 .tabs-nav {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-around;
-    background-color: hsl(var(--background));
-    border-top: 1px solid hsl(var(--border));
-    /* min-height is the tap zone; padding-bottom pushes content above the gesture bar */
-    min-height: var(--tabs-height);
-    padding-top: 4px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+    display: inline-flex;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius, 0.5rem);
+    background-color: hsl(var(--muted));
+    padding: 0.25rem;
+    margin: 1rem 1.25rem 0.5rem;
+    width: calc(100% - 2.5rem);
     flex-shrink: 0;
-    position: relative;
-    z-index: 10;
 }
 
 .tab-trigger {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    flex: 1;
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
+    white-space: nowrap;
+    border-radius: calc(var(--radius, 0.5rem) - 2px);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
     font-weight: 500;
-    transition: color 0.2s ease, transform 0.15s ease;
     cursor: pointer;
     border: none;
     background: transparent;
     color: hsl(var(--muted-foreground));
+    flex: 1;
     font-family: inherit;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
-.tab-trigger:active {
-    transform: scale(0.92);
-}
-
-.tab-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.tab-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    transition: color 0.2s ease;
+.tab-trigger:hover {
+    color: hsl(var(--foreground));
 }
 
 .tab-trigger.active {
-    color: hsl(var(--quran-green));
-}
-
-.tab-trigger.active .tab-icon {
-    background-color: hsl(var(--quran-green) / 0.12);
-    transform: translateY(-2px);
-}
-
-.tab-trigger.active svg {
-    stroke-width: 2.5;
-}
-
-.tab-trigger:not(.active):hover {
+    background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.06);
+}
+
+.tab-trigger:active {
+    transform: scale(0.97);
 }
 
 .content {
     flex: 1;
     overflow-y: auto;
     padding: var(--container-padding);
+    padding-bottom: calc(var(--container-padding) + env(safe-area-inset-bottom, 16px));
     min-height: 0;
 }
 
@@ -948,62 +923,90 @@ select.input {
 
 /* ===========================================================================
    MUSHAF STYLES (Reader)
+   Mimics Ottoman Mushaf layout with responsive sizing.
+   Uses flex layout (justify-content: space-between) for even word distribution.
    =========================================================================== */
+
+/* --- Responsive Mushaf sizing ---
+   Scales font-size and line-height based on viewport width.
+   Small phone (320px) → Normal (375px) → Large (430px) → Tablet (768px+)
+*/
+:root {
+    --mushaf-font-size: clamp(19px, 5.8vw, 32px);
+    --mushaf-line-height: clamp(42px, 12vw, 62px);
+    --mushaf-surah-font-size: clamp(36px, 10vw, 60px);
+    --mushaf-basmala-font-size: clamp(18px, 5.2vw, 28px);
+    --mushaf-ayah-symbol-size: clamp(16px, 4.8vw, 28px);
+}
+
 .mushaf-page {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
     margin-bottom: 0;
-    padding: 0 0.5rem;
+    padding: 0.5rem 0.35rem;
     background: transparent;
     border: none;
     border-radius: 0;
+    direction: rtl;
 }
 
+/* Each line: flex row, words distributed edge-to-edge (like printed Mushaf) */
 .mushaf-line {
-    display: block;
-    text-align: justify;
-    text-align-last: justify;
-    text-justify: inter-word;
-    direction: rtl;
-    min-height: 40px;
-    line-height: 1.8;
-    font-size: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+    min-height: var(--mushaf-line-height);
+    font-size: var(--mushaf-font-size);
     font-family: 'UthmanicHafs', serif;
     color: hsl(var(--foreground));
-    overflow-wrap: break-word;
-    word-break: normal;
+    direction: rtl;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
+/* Last line with few words — center instead of stretching */
 .mushaf-line.centered {
-    text-align: center;
-    text-align-last: center;
+    justify-content: center;
+    gap: clamp(8px, 2.5vw, 15px);
 }
 
 /* Partial lines — wird starts/ends mid-Mushaf-line */
-/* RTL: right = start of line, left = end of line */
+/* Dynamic padding is set inline via JS based on word position ratios */
 
 /* Gap on right (RTL start) — wird starts mid-line */
 .mushaf-line.partial-start {
-    text-align: left;
-    text-align-last: left;
+    justify-content: space-between;
+    /* padding-right set dynamically in JS */
 }
 
 /* Gap on left (RTL end) — wird ends mid-line */
 .mushaf-line.partial-end {
-    text-align: right;
-    text-align-last: right;
+    justify-content: space-between;
+    /* padding-left set dynamically in JS */
 }
 
 /* Gap on both sides */
 .mushaf-line.partial-both {
-    text-align: center;
-    text-align-last: center;
+    justify-content: space-between;
+    /* padding-right and padding-left set dynamically in JS */
+}
+
+/* When partial line has only 1 word, center it in the remaining space */
+.mushaf-line.partial-start.single-word,
+.mushaf-line.partial-end.single-word,
+.mushaf-line.partial-both.single-word {
+    justify-content: center;
 }
 
 .mushaf-word {
+    display: inline-flex;
+    align-items: center;
     cursor: pointer;
     transition: color 0.2s;
+    user-select: text;
+    flex-shrink: 0;
 }
 
 .mushaf-word:hover {
@@ -1012,34 +1015,45 @@ select.input {
 
 .mushaf-word.bookmarked {
     background: hsl(var(--quran-green) / 0.15);
-    border-radius: 3px;
-    padding: 1px 3px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    box-shadow: 0 0 0 2px hsl(var(--quran-green) / 0.3);
 }
 
 .ayah-symbol {
     color: hsl(var(--quran-green));
     font-family: 'UthmanicHafs', serif;
-    font-size: 0.85em;
-    margin: 0 3px;
+    font-size: var(--mushaf-ayah-symbol-size);
+    margin: 0 2px;
+    user-select: text;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .surah-header {
     font-family: 'SurahNames', serif;
-    font-size: 40px;
-    text-align: center;
-    margin: 15px 0;
-    color: hsl(var(--foreground));
+    font-size: var(--mushaf-surah-font-size);
+    height: var(--mushaf-line-height);
     display: flex;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
+    gap: clamp(8px, 3vw, 20px);
+    margin: clamp(10px, 3vw, 20px) 0;
+    color: hsl(var(--foreground));
 }
 
 .basmala {
     font-family: 'Amiri', serif;
-    font-size: 22px;
+    font-size: var(--mushaf-basmala-font-size);
     text-align: center;
-    margin: 15px 0;
+    margin: clamp(10px, 3vw, 20px) 0;
     color: hsl(var(--foreground));
+    height: var(--mushaf-line-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-footer {
@@ -1059,6 +1073,32 @@ select.input {
     flex: 1;
     height: 1px;
     background-color: hsl(var(--border));
+}
+
+/* --- Mushaf responsive breakpoints --- */
+
+/* Very small phones (< 340px) - e.g. iPhone SE 1st gen */
+@media (max-width: 340px) {
+    :root {
+        --mushaf-font-size: 17px;
+        --mushaf-line-height: 38px;
+    }
+}
+
+/* Tablets and larger screens */
+@media (min-width: 600px) {
+    :root {
+        --mushaf-font-size: 28px;
+        --mushaf-line-height: 56px;
+        --mushaf-surah-font-size: 56px;
+        --mushaf-basmala-font-size: 26px;
+    }
+    
+    .mushaf-page {
+        padding: 1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
 }
 
 /* ===========================================================================

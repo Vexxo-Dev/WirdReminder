@@ -77,10 +77,6 @@ export function createLineElement(words, isCentered = false) {
     div.className = isCentered ? 'mushaf-line centered' : 'mushaf-line';
 
     words.forEach(word => {
-        // Add a space between words so text-align:justify can distribute them
-        if (div.childNodes.length > 0) {
-            div.appendChild(document.createTextNode(' '));
-        }
         div.appendChild(createWordElement(word));
     });
 

@@ -620,12 +620,16 @@ function renderReaderContent(pagesData, fullLineInfoMap) {
             if (lineWords) {
                 // Determine line type: full or partial
                 let lineClass = 'mushaf-line';
+                let partialType = 'full';
 
                 if (pageFullInfo) {
                     const fullInfo = pageFullInfo.get(i);
-                    const partialType = getPartialLineType(lineWords, fullInfo);
+                    partialType = getPartialLineType(lineWords, fullInfo);
                     if (partialType !== 'full') {
                         lineClass += ` ${partialType}`;
+                        if (lineWords.length <= 1) {
+                            lineClass += ' single-word';
+                        }
                     }
                 } else {
                     // No full info = full surah/juz, use old heuristic for last line only
@@ -638,6 +642,33 @@ function renderReaderContent(pagesData, fullLineInfoMap) {
                 const lineDiv = document.createElement('div');
                 lineDiv.className = lineClass;
 
+                // For partial lines, calculate and apply dynamic padding
+                // to simulate the gap where missing words would be on the Mushaf page
+                if (partialType !== 'full' && pageFullInfo) {
+                    const fullInfo = pageFullInfo.get(i);
+                    if (fullInfo && fullInfo.totalWords > 0) {
+                        // Find first and last word positions in this wird's line
+                        let wirdFirstPos = Infinity;
+                        let wirdLastPos = -1;
+                        lineWords.forEach(w => {
+                            wirdFirstPos = Math.min(wirdFirstPos, w.position);
+                            wirdLastPos = Math.max(wirdLastPos, w.position);
+                        });
+
+                        if (partialType === 'partial-start' || partialType === 'partial-both') {
+                            // Gap at start (right side in RTL)
+                            const startGap = (wirdFirstPos - fullInfo.firstPos) / fullInfo.totalWords;
+                            lineDiv.style.paddingRight = `${Math.round(startGap * 100)}%`;
+                        }
+                        if (partialType === 'partial-end' || partialType === 'partial-both') {
+                            // Gap at end (left side in RTL)
+                            const endGap = (fullInfo.lastPos - wirdLastPos) / fullInfo.totalWords;
+                            lineDiv.style.paddingLeft = `${Math.round(endGap * 100)}%`;
+                        }
+                    }
+                }
+
+                // Render words — flex layout, no text spacers needed
                 lineWords.forEach(word => {
                     const span = document.createElement('span');
                     span.textContent = word.text_qpc_hafs || word.text_uthmani;
@@ -666,10 +697,6 @@ function renderReaderContent(pagesData, fullLineInfoMap) {
                         });
                     }
 
-                    // Add a space between words so text-align:justify can distribute them
-                    if (lineDiv.childNodes.length > 0) {
-                        lineDiv.appendChild(document.createTextNode(' '));
-                    }
                     lineDiv.appendChild(span);
                 });
 
@@ -703,6 +730,82 @@ function renderReaderContent(pagesData, fullLineInfoMap) {
         pageDiv.appendChild(footer);
 
         readerContent.appendChild(pageDiv);
+    });
+
+    // After all pages are in the DOM, reflow lines that overflow
+    requestAnimationFrame(() => {
+        reflowAllPages();
+    });
+}
+
+/**
+ * Reflows all mushaf pages: if any line overflows its container,
+ * move trailing words/symbols to the next line until nothing overflows.
+ * This adapts the standard 15-line Mushaf layout to any screen width.
+ */
+function reflowAllPages() {
+    const pages = readerContent.querySelectorAll('.mushaf-page');
+    pages.forEach(pageDiv => reflowPage(pageDiv));
+}
+
+function reflowPage(pageDiv) {
+    // Collect only .mushaf-line elements (skip surah-header, basmala, page-footer)
+    const allLines = Array.from(pageDiv.querySelectorAll('.mushaf-line'));
+    if (allLines.length === 0) return;
+
+    // Multiple passes — moving a word down may cause the next line to overflow too
+    let changed = true;
+    let safety = 0;
+    const maxPasses = 30;
+
+    while (changed && safety < maxPasses) {
+        changed = false;
+        safety++;
+
+        for (let i = 0; i < allLines.length; i++) {
+            const line = allLines[i];
+            if (line.children.length === 0) continue;
+
+            // Check if this line overflows
+            while (line.scrollWidth > line.clientWidth + 2 && line.children.length > 1) {
+                // Get or create the next line
+                let nextLine = allLines[i + 1];
+                if (!nextLine) {
+                    // Create a new line at the end
+                    nextLine = document.createElement('div');
+                    nextLine.className = 'mushaf-line';
+                    // Insert before page-footer
+                    const footer = pageDiv.querySelector('.page-footer');
+                    if (footer) {
+                        pageDiv.insertBefore(nextLine, footer);
+                    } else {
+                        pageDiv.appendChild(nextLine);
+                    }
+                    allLines.splice(i + 1, 0, nextLine);
+                }
+
+                // Move the last child of current line to the BEGINNING of next line
+                // (RTL: last child visually is the leftmost = last in DOM)
+                const lastChild = line.lastElementChild;
+                if (nextLine.firstChild) {
+                    nextLine.insertBefore(lastChild, nextLine.firstChild);
+                } else {
+                    nextLine.appendChild(lastChild);
+                }
+                changed = true;
+            }
+        }
+    }
+
+    // After reflow, update centering on the last mushaf-line
+    // (if it has few words, it should be centered)
+    const finalLines = Array.from(pageDiv.querySelectorAll('.mushaf-line'));
+    finalLines.forEach((line, idx) => {
+        const isLast = idx === finalLines.length - 1;
+        line.classList.remove('centered');
+        if (isLast && line.children.length < 5 && line.children.length > 0) {
+            line.classList.add('centered');
+        }
     });
 }
 
