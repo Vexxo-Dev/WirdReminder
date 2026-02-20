@@ -1,6 +1,6 @@
-import { fetchAllSurahs, fetchSurahVerses, fetchAyahRange, fetchJuzVerses, getSurahName } from './core/js/api.js';
+import { fetchAllSurahs, fetchSurahVerses, fetchAyahRange, fetchJuzVerses, fetchPageVerses, getSurahName } from './core/js/api.js';
 import { storage } from './core/js/adapter/storage.js';
-import { parseVersesToPages } from './core/js/parser.js';
+import { parseVersesToPages, buildFullLineInfo, getPartialLineType } from './core/js/parser.js';
 import * as reminderLogic from './core/js/logic/reminders.js';
 import { env } from './core/js/adapter/env.js';
 import { notificationManager } from './core/js/adapter/notifications.js';
@@ -536,7 +536,20 @@ async function openReader(reminder) {
         }
 
         const pages = parseVersesToPages(verses);
-        renderReaderContent(pages);
+
+        // For ayah_range, fetch full page context to detect partial lines
+        let fullLineInfoMap = null; // Map<pageNumber, Map<lineNumber, info>>
+        if (reminder.type === 'ayah_range') {
+            fullLineInfoMap = new Map();
+            const pageNumbers = [...new Set(pages.map(p => p.pageNumber))];
+            const fullPagePromises = pageNumbers.map(async (pn) => {
+                const fullVerses = await fetchPageVerses(pn);
+                fullLineInfoMap.set(pn, buildFullLineInfo(fullVerses));
+            });
+            await Promise.all(fullPagePromises);
+        }
+
+        renderReaderContent(pages, fullLineInfoMap);
         restoreBookmark();
 
     } catch (e) {
@@ -589,7 +602,7 @@ async function updateMarkReadButton(reminder, btn) {
     }
 }
 
-function renderReaderContent(pagesData) {
+function renderReaderContent(pagesData, fullLineInfoMap) {
     readerContent.innerHTML = '';
 
     pagesData.forEach(pageData => {
@@ -598,15 +611,32 @@ function renderReaderContent(pagesData) {
         pageDiv.className = 'mushaf-page';
         pageDiv.dataset.page = pageNumber;
 
+        // Get full line info for this page (null for full surahs/juz)
+        const pageFullInfo = fullLineInfoMap ? fullLineInfoMap.get(pageNumber) : null;
+
         for (let i = 1; i <= 15; i++) {
             const lineWords = lines.get(i);
 
             if (lineWords) {
-                const isLast = i === 15 || !lines.has(i + 1);
-                const isCentered = isLast && lineWords.length < 5;
+                // Determine line type: full or partial
+                let lineClass = 'mushaf-line';
+
+                if (pageFullInfo) {
+                    const fullInfo = pageFullInfo.get(i);
+                    const partialType = getPartialLineType(lineWords, fullInfo);
+                    if (partialType !== 'full') {
+                        lineClass += ` ${partialType}`;
+                    }
+                } else {
+                    // No full info = full surah/juz, use old heuristic for last line only
+                    const isLast = i === 15 || !lines.has(i + 1);
+                    if (isLast && lineWords.length < 5) {
+                        lineClass += ' centered';
+                    }
+                }
 
                 const lineDiv = document.createElement('div');
-                lineDiv.className = isCentered ? 'mushaf-line centered' : 'mushaf-line';
+                lineDiv.className = lineClass;
 
                 lineWords.forEach(word => {
                     const span = document.createElement('span');
@@ -636,6 +666,10 @@ function renderReaderContent(pagesData) {
                         });
                     }
 
+                    // Add a space between words so text-align:justify can distribute them
+                    if (lineDiv.childNodes.length > 0) {
+                        lineDiv.appendChild(document.createTextNode(' '));
+                    }
                     lineDiv.appendChild(span);
                 });
 

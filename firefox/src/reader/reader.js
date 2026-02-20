@@ -3,10 +3,18 @@ import { parseVersesToPages } from '../core/js/parser.js';
 import { renderPages, showError } from '../core/js/renderer.js';
 import { storage } from '../core/js/adapter/storage.js';
 import * as reminderLogic from '../core/js/logic/reminders.js';
+import { themeManager } from '../core/js/theme.js';
 
 let currentReminderId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize theme toggle in reader
+    const themeToggleContainer = document.getElementById('theme-toggle-container');
+    if (themeToggleContainer) {
+        const toggleButton = themeManager.createToggleButton();
+        themeToggleContainer.appendChild(toggleButton);
+    }
+
     const params = new URLSearchParams(window.location.search);
     currentReminderId = params.get('reminderId');
     const container = document.getElementById('content-area');
