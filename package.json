@@ -1,6 +1,6 @@
 {
   "name": "wirdreminder",
-  "version": "1.2.0",
+  "version": "1.3.4",
   "description": "A humble companion for your journey with the Holy Quran.",
   "main": "www/app.js",
   "scripts": {
