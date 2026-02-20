@@ -593,12 +593,10 @@ async function updateMarkReadButton(reminder, btn) {
 
     if (isRead) {
         btn.textContent = '✗ إلغاء القراءة';
-        btn.style.backgroundColor = 'hsl(var(--muted))';
-        btn.style.color = 'hsl(var(--foreground))';
+        btn.classList.add('marked');
     } else {
         btn.textContent = '✓ تحديد كمقروء';
-        btn.style.backgroundColor = 'hsl(var(--quran-green))';
-        btn.style.color = 'white';
+        btn.classList.remove('marked');
     }
 }
 
