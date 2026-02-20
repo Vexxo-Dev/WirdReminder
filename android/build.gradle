@@ -24,25 +24,19 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-
 subprojects {
-    afterEvaluate { project ->
+    afterEvaluate {
         if (project.hasProperty('android')) {
-            project.android {
+            android {
                 compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_21
-                    targetCompatibility JavaVersion.VERSION_21
-                }
-                // This checks if the Kotlin plugin is applied to the subproject
-                if (project.plugins.hasPlugin('kotlin-android') || project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
-                    kotlinOptions {
-                        jvmTarget = '21'
-                    }
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
                 }
             }
         }
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
